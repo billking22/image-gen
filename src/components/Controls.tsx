@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { type CardState, type AspectRatio, type Layout as LayoutType } from "@/types/card";
-import { Download, Layout as LayoutIcon, Type, Palette, User, Maximize, Sparkles, AlignLeft, AlignCenter, Image as ImageIcon } from "lucide-react";
+import { Download, Layout as LayoutIcon, Type, Palette, User, Maximize, Sparkles, AlignLeft, AlignCenter, Image as ImageIcon, Quote, MessageSquare, List as ListIcon, BookOpen, BookType, HelpCircle, ListOrdered, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ControlsProps {
@@ -67,22 +67,60 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
         <section className="space-y-4">
           <label className="block text-sm font-bold text-zinc-400 uppercase tracking-widest">Layout & Ratio</label>
           
-          <div className="flex gap-2">
-            {(["left", "center"] as LayoutType[]).map((l) => (
-              <button
-                key={l}
-                onClick={() => onChange({ layout: l })}
-                className={cn(
-                  "flex-1 p-3 rounded-xl border transition-all flex items-center justify-center gap-2",
-                  state.layout === l 
-                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-900 dark:border-white shadow-lg" 
-                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
-                )}
-              >
-                {l === "left" ? <AlignLeft className="w-4 h-4" /> : <AlignCenter className="w-4 h-4" />}
-                <span className="text-xs font-bold capitalize">{l}</span>
-              </button>
-            ))}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Classic & Social</span>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "left", label: "Left", icon: <AlignLeft className="w-4 h-4" /> },
+                  { id: "center", label: "Center", icon: <AlignCenter className="w-4 h-4" /> },
+                  { id: "quote", label: "Quote", icon: <Quote className="w-4 h-4" /> },
+                  { id: "tweet", label: "Tweet", icon: <MessageSquare className="w-4 h-4" /> },
+                  { id: "list", label: "List", icon: <ListIcon className="w-4 h-4" /> },
+                  { id: "magazine", label: "Magazine", icon: <BookOpen className="w-4 h-4" /> },
+                ].map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => onChange({ layout: l.id as LayoutType })}
+                    className={cn(
+                      "p-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1",
+                      state.layout === l.id 
+                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-900 dark:border-white shadow-lg" 
+                        : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 text-zinc-500 dark:text-zinc-400"
+                    )}
+                  >
+                    {l.icon}
+                    <span className="text-[10px] font-bold capitalize">{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Knowledge Cards</span>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { id: "dictionary", label: "Dictionary", icon: <BookType className="w-4 h-4" /> },
+                  { id: "qa", label: "Q&A", icon: <HelpCircle className="w-4 h-4" /> },
+                  { id: "steps", label: "Steps", icon: <ListOrdered className="w-4 h-4" /> },
+                  { id: "code", label: "Terminal", icon: <Terminal className="w-4 h-4" /> },
+                ].map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => onChange({ layout: l.id as LayoutType })}
+                    className={cn(
+                      "p-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1",
+                      state.layout === l.id 
+                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-900 dark:border-white shadow-lg" 
+                        : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 text-zinc-500 dark:text-zinc-400"
+                    )}
+                  >
+                    {l.icon}
+                    <span className="text-[10px] font-bold capitalize">{l.label.replace(' ', '\n')}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-4 gap-2">

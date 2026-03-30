@@ -1,5 +1,5 @@
 export type AspectRatio = "3:4" | "4:3" | "1:1" | "9:16";
-export type Layout = "left" | "center";
+export type Layout = "left" | "center" | "quote" | "tweet" | "list" | "magazine" | "dictionary" | "qa" | "steps" | "code";
 export type BackgroundType = "solid" | "gradient" | "image";
 
 export interface CardState {
