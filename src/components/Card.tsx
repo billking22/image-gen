@@ -13,7 +13,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
     subtitle,
     content,
     author,
+    watermark,
     backgroundType,
+    patternType,
     useGlass,
     aspectRatio,
     layout,
@@ -59,6 +61,53 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
         color: textColor,
       }}
     >
+      {/* SVG Patterns */}
+      {backgroundType === "pattern" && patternType !== "none" && (
+        <div className={cn(
+          "absolute inset-0 z-0 pointer-events-none",
+          patternType === "blobs" ? "opacity-40" : "opacity-20 mix-blend-overlay"
+        )}>
+          {patternType === "dots" && (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                  <circle fill="currentColor" cx="3" cy="3" r="3" />
+                </pattern>
+              </defs>
+              <rect x="0" y="0" width="100%" height="100%" fill="url(#dots)" />
+            </svg>
+          )}
+          {patternType === "grid" && (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="2"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          )}
+          {patternType === "lines" && (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="lines" width="100" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 0 40 L 100 40" fill="none" stroke="currentColor" strokeWidth="2"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#lines)" />
+            </svg>
+          )}
+          {patternType === "blobs" && (
+             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" className="blur-3xl transform scale-110">
+               <circle cx="10%" cy="10%" r="35%" fill="currentColor" opacity="0.5" />
+               <circle cx="90%" cy="90%" r="40%" fill="currentColor" opacity="0.6" />
+               <circle cx="80%" cy="20%" r="20%" fill="currentColor" opacity="0.4" />
+               <circle cx="20%" cy="80%" r="25%" fill="currentColor" opacity="0.5" />
+             </svg>
+          )}
+        </div>
+      )}
+
       {/* True Gaussian Blur Background Image Layer */}
       {backgroundType === "image" && backgroundImage && (
         <div
@@ -383,6 +432,22 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Watermarks */}
+      {watermark && (
+        <>
+          <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.03] mix-blend-overlay">
+             <div className="text-[120px] font-black uppercase tracking-widest whitespace-nowrap rotate-[-35deg] select-none">
+               {watermark} {watermark}
+             </div>
+          </div>
+          <div className="absolute bottom-6 right-8 z-30 pointer-events-none mix-blend-overlay opacity-80">
+            <p className="text-[10px] font-black tracking-[0.3em] uppercase whitespace-nowrap drop-shadow-sm">
+              {watermark}
+            </p>
+          </div>
+        </>
       )}
 
     </div>

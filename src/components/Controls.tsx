@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { type CardState, type AspectRatio, type Layout as LayoutType } from "@/types/card";
-import { Download, Layout as LayoutIcon, Type, Palette, User, Maximize, Sparkles, AlignLeft, AlignCenter, Image as ImageIcon, Quote, MessageSquare, List as ListIcon, BookOpen, BookType, HelpCircle, ListOrdered, Terminal } from "lucide-react";
+import { Download, Layout as LayoutIcon, Type, Palette, User, Maximize, Sparkles, AlignLeft, AlignCenter, Image as ImageIcon, Quote, MessageSquare, List as ListIcon, BookOpen, BookType, HelpCircle, ListOrdered, Terminal, Wand2, Grid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ControlsProps {
@@ -8,6 +8,14 @@ interface ControlsProps {
   onChange: (updates: Partial<CardState>) => void;
   onDownload: () => void;
 }
+
+const THEMES = [
+  { id: 'sunset', name: 'Sunset', bg: '#ff4d4d', text: '#ffffff', type: 'gradient', pattern: 'none' },
+  { id: 'cyberpunk', name: 'Cyberpunk', bg: '#000000', text: '#00ffcc', type: 'solid', pattern: 'grid' },
+  { id: 'minimalist', name: 'White', bg: '#ffffff', text: '#171717', type: 'solid', pattern: 'dots' },
+  { id: 'klein', name: 'Klein Blue', bg: '#002fa7', text: '#ffffff', type: 'solid', pattern: 'none' },
+  { id: 'vintage', name: 'Vintage', bg: '#f4ebd8', text: '#3e3a35', type: 'solid', pattern: 'lines' },
+];
 
 export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,12 +32,33 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
   };
 
   return (
-    <div className="w-full lg:w-96 bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 p-6 space-y-8 overflow-y-auto h-full">
-      <div className="space-y-6">
+    <div className="w-full lg:w-[400px] bg-white dark:bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-800 p-6 lg:p-8 space-y-8 lg:overflow-y-auto lg:h-screen z-20 relative shadow-2xl lg:shadow-none">
+      <div className="space-y-8">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <LayoutIcon className="w-5 h-5 text-brand-start" />
           Card Controls
         </h2>
+
+        {/* Theme Presets */}
+        <section className="space-y-4">
+          <label className="block text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <Wand2 className="w-4 h-4" /> Magic Themes
+          </label>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {THEMES.map(t => (
+               <button 
+                 key={t.id} 
+                 onClick={() => onChange({ backgroundColor: t.bg, textColor: t.text, backgroundType: t.type as any, patternType: t.pattern as any })}
+                 className="flex flex-col items-center gap-2 shrink-0 group transition-all"
+               >
+                 <div className="w-12 h-12 rounded-full shadow-md border-2 border-zinc-200 dark:border-zinc-700 transition-transform group-hover:scale-110 flex items-center justify-center overflow-hidden relative" style={{ background: t.type === 'gradient' ? `linear-gradient(135deg, ${t.bg}, #f9cb28)` : t.bg }}>
+                   {t.pattern !== 'none' && <Grid className="w-4 h-4 opacity-50 mix-blend-difference text-white" />}
+                 </div>
+                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t.name}</span>
+               </button>
+            ))}
+          </div>
+        </section>
 
         {/* Content Section */}
         <section className="space-y-4">
@@ -60,6 +89,13 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
             className="w-full p-3 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl focus:ring-2 ring-brand-start transition-all outline-none text-sm"
             value={state.author}
             onChange={(e) => onChange({ author: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Watermark (e.g. © 2026 @knowledge)"
+            className="w-full p-3 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl focus:ring-2 ring-brand-start transition-all outline-none text-sm text-zinc-500 font-mono"
+            value={state.watermark}
+            onChange={(e) => onChange({ watermark: e.target.value })}
           />
         </section>
 
@@ -145,10 +181,11 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
         <section className="space-y-4">
           <label className="block text-sm font-bold text-zinc-400 uppercase tracking-widest">Background</label>
           
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {([
               { id: "solid", label: "Solid" },
               { id: "gradient", label: "Gradi." },
+              { id: "pattern", label: "Pattern" },
               { id: "image", label: "Image" }
             ] as const).map((b) => (
               <button
@@ -165,6 +202,25 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
               </button>
             ))}
           </div>
+
+          {state.backgroundType === "pattern" && (
+            <div className="grid grid-cols-4 gap-2 animate-in fade-in slide-in-from-top-2">
+               {(["dots", "grid", "lines", "blobs"] as const).map(p => (
+                 <button
+                    key={p}
+                    onClick={() => onChange({ patternType: p })}
+                    className={cn(
+                      "p-2 text-[10px] font-black rounded-lg border transition-all uppercase",
+                      state.patternType === p
+                        ? "bg-brand-start text-white border-brand-start shadow-md" 
+                        : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-brand-start text-zinc-500"
+                    )}
+                 >
+                   {p}
+                 </button>
+               ))}
+            </div>
+          )}
 
           {state.backgroundType === "image" && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2">

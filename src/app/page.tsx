@@ -65,11 +65,11 @@ export default function Home() {
 
 
   return (
-    <main className="flex flex-col lg:flex-row h-screen bg-zinc-50 dark:bg-black overflow-hidden font-sans">
+    <main className="flex flex-col lg:flex-row min-h-screen bg-zinc-50 dark:bg-black font-sans">
       {/* Visual Area */}
       <div 
         ref={containerRef}
-        className="flex-1 relative flex flex-col items-center justify-center p-8 lg:p-20 overflow-hidden"
+        className="w-full lg:flex-1 relative flex flex-col items-center justify-center p-4 lg:p-20 overflow-hidden sticky top-0 h-[55vh] lg:h-screen bg-zinc-50 dark:bg-black z-10 border-b lg:border-none border-zinc-200 dark:border-zinc-800"
       >
         {/* Header decoration */}
         <div className="absolute top-8 left-8 flex items-center gap-3">
