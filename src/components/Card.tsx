@@ -47,7 +47,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
         "relative flex flex-col justify-between p-10 overflow-hidden shadow-2xl transition-all duration-500",
         aspectClass,
         isCentered ? "text-center items-center" : "text-left items-start",
-        "w-full max-w-[500px] mx-auto"
+        "w-[500px] shrink-0 mx-auto"
       )}
       style={{
         background: backgroundType === "gradient" 
