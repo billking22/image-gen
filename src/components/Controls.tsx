@@ -97,6 +97,42 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
             value={state.watermark}
             onChange={(e) => onChange({ watermark: e.target.value })}
           />
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-black text-zinc-400 tracking-widest">Cover Image</span>
+              {state.coverImage && (
+                <button 
+                  onClick={() => onChange({ coverImage: undefined })}
+                  className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      onChange({ coverImage: reader.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                };
+                input.click();
+              }}
+              className="w-full p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center gap-2 text-xs font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
+            >
+              <ImageIcon className="w-4 h-4" />
+              {state.coverImage ? "Change Cover Image" : "Upload Cover Image"}
+            </button>
+            <p className="text-[10px] text-zinc-400 italic">Optional. Used in select templates.</p>
+          </div>
         </section>
 
         {/* Layout & Ratio Section */}
@@ -106,14 +142,18 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
           <div className="space-y-4">
             <div className="space-y-2">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Classic & Social</span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {[
+                  { id: "cover", label: "Cover", icon: <ImageIcon className="w-4 h-4" /> },
                   { id: "left", label: "Left", icon: <AlignLeft className="w-4 h-4" /> },
                   { id: "center", label: "Center", icon: <AlignCenter className="w-4 h-4" /> },
                   { id: "quote", label: "Quote", icon: <Quote className="w-4 h-4" /> },
                   { id: "tweet", label: "Tweet", icon: <MessageSquare className="w-4 h-4" /> },
                   { id: "list", label: "List", icon: <ListIcon className="w-4 h-4" /> },
+                  { id: "denseList", label: "Dense", icon: <ListIcon className="w-4 h-4" /> },
                   { id: "magazine", label: "Magazine", icon: <BookOpen className="w-4 h-4" /> },
+                  { id: "minimal", label: "Minimal", icon: <AlignLeft className="w-4 h-4" /> },
+                  { id: "notion", label: "Notion", icon: <BookOpen className="w-4 h-4" /> },
                 ].map((l) => (
                   <button
                     key={l.id}
@@ -292,14 +332,31 @@ export const Controls: React.FC<ControlsProps> = ({ state, onChange, onDownload 
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] uppercase font-black text-zinc-400 tracking-widest">Text Size</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-black text-zinc-400 tracking-widest">Text Size</span>
+                <label className="flex items-center gap-1 cursor-pointer group" onClick={() => onChange({ autoScaleText: !state.autoScaleText })}>
+                  <div className={cn(
+                    "w-6 h-3 rounded-full transition-all relative",
+                    state.autoScaleText ? "bg-brand-start" : "bg-zinc-300 dark:bg-zinc-600"
+                  )}>
+                    <div className={cn(
+                      "absolute top-0.5 w-2 h-2 bg-white rounded-full transition-all",
+                      state.autoScaleText ? "left-3.5" : "left-0.5"
+                    )} />
+                  </div>
+                  <span className="text-[9px] font-bold text-zinc-400 group-hover:text-zinc-500">AUTO-FIT</span>
+                </label>
+              </div>
               <span className="text-[10px] font-bold text-brand-start">{state.fontSize}px</span>
             </div>
             <input
               type="range"
               min="14"
               max="60"
-              className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-brand-start"
+              className={cn(
+                "w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-brand-start transition-opacity",
+                state.autoScaleText ? "opacity-50" : "opacity-100"
+              )}
               value={state.fontSize}
               onChange={(e) => onChange({ fontSize: parseInt(e.target.value) })}
             />

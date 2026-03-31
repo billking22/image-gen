@@ -1,11 +1,30 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { type CardState } from "@/types/card";
 import { Quote, CheckCircle2, MessageCircle, Heart, Bookmark, BookType, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 
 interface CardProps {
   state: CardState;
 }
+
+const MarkdownComponents: Components = {
+  p: ({node, ...props}) => <p className="mb-2 last:mb-0 break-words whitespace-pre-wrap" {...props} />,
+  strong: ({node, ...props}) => <strong className="font-black" {...props} />,
+  em: ({node, ...props}) => <em className="italic" {...props} />,
+  ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+  ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+  li: ({node, ...props}) => <li className="" {...props} />,
+  a: ({node, ...props}) => <a className="underline decoration-2 underline-offset-4 opacity-90" {...props} />,
+  h1: ({node, ...props}) => <h1 className="text-2xl font-black mb-2" {...props} />,
+  h2: ({node, ...props}) => <h2 className="text-xl font-bold mb-2" {...props} />,
+  h3: ({node, ...props}) => <h3 className="text-lg font-bold mb-2" {...props} />,
+  blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-current pl-4 mb-2 opacity-80 italic" {...props} />,
+  code: ({node, className, children, ...props}) => {
+    return <code className="bg-black/10 dark:bg-white/10 rounded px-1.5 py-0.5 font-mono text-[0.9em]" {...props}>{children}</code>;
+  }
+};
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
   const {
@@ -22,7 +41,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
     fontSize,
     textColor,
     backgroundColor,
-    backgroundImage
+    backgroundImage,
+    autoScaleText,
+    coverImage
   } = state;
 
   const aspectClass = {
@@ -42,9 +63,35 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
   const isCentered = layout === "center";
   const showGlass = backgroundType === "image" && useGlass;
 
+  const localCardRef = useRef<HTMLDivElement>(null);
+  
+  // Combine refs
+  const setRefs = (node: HTMLDivElement) => {
+    localCardRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref && 'current' in ref) (ref as any).current = node;
+  };
+
+  const [actualFontSize, setActualFontSize] = useState(fontSize);
+
+  // Reset actual font size whenever state overrides it
+  useEffect(() => {
+    setActualFontSize(fontSize);
+  }, [fontSize, layout, aspectRatio, content, coverImage]);
+
+  // Auto-scale loop
+  useEffect(() => {
+    if (!autoScaleText || !localCardRef.current) return;
+    
+    const card = localCardRef.current;
+    if (card.scrollHeight > card.clientHeight && actualFontSize > 12) {
+      setActualFontSize(prev => prev - 1);
+    }
+  }, [actualFontSize, content, autoScaleText, layout, aspectRatio, coverImage]);
+
   return (
     <div
-      ref={ref}
+      ref={setRefs}
       id="card-to-export"
       className={cn(
         "relative flex flex-col justify-between p-10 overflow-hidden shadow-2xl transition-all duration-500",
@@ -152,9 +199,13 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
               isCentered ? "mx-auto" : ""
             )} />
 
-            <p className="leading-relaxed font-normal opacity-90 max-w-[90%] whitespace-pre-wrap" style={{ fontSize: `${fontSize}px`, marginLeft: isCentered ? "auto" : "0", marginRight: isCentered ? "auto" : "0" }}>
-              {content}
-            </p>
+            {coverImage && (
+              <img src={coverImage} className="w-full max-h-56 object-cover rounded-xl shadow-md border border-white/10 my-4" alt="Cover" />
+            )}
+
+            <div className="leading-relaxed font-normal opacity-90 w-full" style={{ fontSize: `${actualFontSize}px`, marginLeft: isCentered ? "auto" : "0", marginRight: isCentered ? "auto" : "0" }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+            </div>
           </div>
 
           <div className={cn(
@@ -181,11 +232,14 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
       {/* 2. QUOTE */}
       {layout === "quote" && (
         <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center px-4 w-full">
+          {coverImage && (
+            <img src={coverImage} className="w-24 h-24 object-cover rounded-full shadow-lg border-2 border-white/20 mb-6" alt="Cover" />
+          )}
           <div className="relative w-full max-w-[85%] mx-auto py-12">
             <Quote className="w-20 h-20 opacity-20 absolute top-0 -left-6 z-0" />
-            <p className="font-bold leading-relaxed tracking-wide opacity-95 z-10 relative whitespace-pre-wrap" style={{ fontSize: `${fontSize * 1.2}px` }}>
-              {content}
-            </p>
+            <div className="font-bold leading-relaxed tracking-wide opacity-95 z-10 relative" style={{ fontSize: `${actualFontSize * 1.2}px` }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+            </div>
             <Quote className="w-20 h-20 opacity-20 absolute bottom-0 -right-4 rotate-180 z-0" />
           </div>
           <div className="mt-8 opacity-80 font-black tracking-[0.2em] uppercase text-sm z-10">
@@ -206,13 +260,18 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
               {subtitle}
             </p>
           </div>
+          
+          {coverImage && (
+             <img src={coverImage} className="w-full max-h-40 object-cover rounded-xl shadow-md border border-white/10 mb-6" alt="Cover" />
+          )}
+
           <div className="space-y-4 flex-1">
             {content.split('\n').filter(Boolean).map((line, i) => (
               <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white/15 dark:bg-black/15 backdrop-blur-md border border-white/20 shadow-sm">
                 <CheckCircle2 className="w-6 h-6 shrink-0 opacity-80 mt-1" />
-                <p className="leading-relaxed font-bold opacity-95 flex-1" style={{ fontSize: `${fontSize * 0.9}px` }}>
-                  {line}
-                </p>
+                <div className="leading-relaxed font-bold opacity-95 flex-1" style={{ fontSize: `${actualFontSize * 0.9}px` }}>
+                  <ReactMarkdown components={MarkdownComponents}>{line}</ReactMarkdown>
+                </div>
               </div>
             ))}
           </div>
@@ -229,8 +288,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
         <div className="flex-1 flex items-center justify-center z-10 w-full relative">
           <div className="w-full bg-white/95 dark:bg-black/80 backdrop-blur-3xl rounded-3xl p-8 shadow-2xl border border-white/40 text-zinc-900 dark:text-zinc-100">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-brand-start flex items-center justify-center font-bold text-white text-lg shadow-inner uppercase">
-                {author?.[1] || "T"}
+              <div className="w-12 h-12 rounded-full bg-brand-start flex items-center justify-center font-bold text-white text-lg shadow-inner uppercase overflow-hidden">
+                {coverImage ? <img src={coverImage} className="w-full h-full object-cover" /> : author?.[1] || "T"}
               </div>
               <div className="flex-1 text-left">
                 <div className="font-bold text-lg">{author}</div>
@@ -238,9 +297,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
               </div>
             </div>
             {title && <h2 className="font-black text-2xl mb-4 tracking-tight text-left">{title}</h2>}
-            <p className="leading-relaxed opacity-90 whitespace-pre-wrap text-left font-medium" style={{ fontSize: `${fontSize}px` }}>
-              {content}
-            </p>
+            <div className="leading-relaxed opacity-90 text-left font-medium" style={{ fontSize: `${actualFontSize}px` }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+            </div>
             <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center opacity-60">
               <div className="flex items-center gap-6 text-sm font-bold">
                 <span className="flex items-center gap-1.5"><Heart className="w-5 h-5" /> 12.4k</span>
@@ -267,12 +326,18 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
             </div>
           </div>
 
+          {coverImage && (
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-8 z-0 opacity-80">
+                <img src={coverImage} className="w-full h-64 object-cover rounded-xl mix-blend-overlay" />
+             </div>
+          )}
+
           <div className="mb-4 max-w-[85%] bg-black/50 backdrop-blur-xl p-8 rounded-[2rem] border-t border-r border-white/20 text-white shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-start/20 rounded-full blur-3xl" />
             <Quote className="w-8 h-8 mb-4 opacity-70 text-brand-end" />
-            <p className="leading-relaxed font-semibold opacity-95 relative z-10 whitespace-pre-wrap" style={{ fontSize: `${fontSize}px` }}>
-              {content}
-            </p>
+            <div className="leading-relaxed font-semibold opacity-95 relative z-10" style={{ fontSize: `${actualFontSize}px` }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+            </div>
             <div className="mt-6 font-black text-sm tracking-[0.2em] uppercase text-brand-start relative z-10">
               — {author}
             </div>
@@ -298,13 +363,17 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
               )}
             </div>
             {author && (
-              <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-sm text-zinc-500 border border-zinc-200 dark:border-zinc-700 uppercase shrink-0">
-                {author[1] || "T"}
+              <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-sm text-zinc-500 border border-zinc-200 dark:border-zinc-700 uppercase shrink-0 overflow-hidden">
+                {coverImage ? <img src={coverImage} className="w-full h-full object-cover" /> : author[1] || "T"}
               </div>
             )}
           </div>
 
           <div className="w-full h-px bg-zinc-200 dark:bg-zinc-800 mb-6" />
+
+          {coverImage && (
+             <img src={coverImage} className="w-full max-h-32 object-cover rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-800 mb-6" alt="Cover" />
+          )}
 
           <div className="relative pl-6">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-start rounded-full opacity-60" />
@@ -312,9 +381,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
               <BookType className="w-4 h-4" />
               <span>Definition</span>
             </div>
-            <p className="leading-relaxed font-semibold text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap" style={{ fontSize: `${fontSize}px` }}>
-              {content}
-            </p>
+            <div className="leading-relaxed font-semibold text-zinc-700 dark:text-zinc-300" style={{ fontSize: `${actualFontSize}px` }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+            </div>
           </div>
         </div>
       )}
@@ -341,16 +410,16 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
             <div className="flex items-center gap-3 mb-6">
               {author && (
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-xs text-zinc-900 shadow uppercase">
-                    {author[1] || "T"}
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-xs text-zinc-900 shadow uppercase overflow-hidden">
+                    {coverImage ? <img src={coverImage} className="w-full h-full object-cover" /> : author[1] || "T"}
                   </div>
                   <span className="text-sm font-black tracking-widest uppercase opacity-80">{author}</span>
                 </div>
               )}
             </div>
-            <p className="leading-relaxed font-semibold opacity-95 whitespace-pre-wrap" style={{ fontSize: `${fontSize}px` }}>
-              {content}
-            </p>
+            <div className="leading-relaxed font-semibold opacity-95" style={{ fontSize: `${actualFontSize}px` }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+            </div>
           </div>
         </div>
       )}
@@ -366,6 +435,11 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
               {subtitle}
             </p>
           </div>
+          
+          {coverImage && (
+             <img src={coverImage} className="w-full max-h-32 object-cover rounded-[2rem] shadow-lg border border-white/20 mb-6" alt="Cover" />
+          )}
+
           <div className="flex-1 flex flex-col gap-5">
             {content.split('\n').filter(Boolean).map((line, i) => (
               <div key={i} className="relative flex items-center p-6 rounded-[2rem] bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 shadow-lg overflow-hidden group">
@@ -378,9 +452,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-start to-brand-end flex items-center justify-center text-white font-black text-lg shadow-inner shrink-0 rotate-3">
                     {i + 1}
                   </div>
-                  <p className="leading-relaxed font-bold opacity-95 flex-1" style={{ fontSize: `${fontSize * 0.9}px` }}>
-                    {line}
-                  </p>
+                  <div className="leading-relaxed font-bold opacity-95 flex-1" style={{ fontSize: `${actualFontSize * 0.9}px` }}>
+                    <ReactMarkdown components={MarkdownComponents}>{line}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}
@@ -423,12 +497,155 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ state }, ref) => {
                   <span className="text-[#858585] italic font-medium text-sm">// {subtitle}</span>
                 </div>
               )}
-              <div className="text-[#e6e6e6] whitespace-pre-wrap leading-relaxed pb-4 pt-2 font-medium" style={{ fontSize: `${fontSize * 0.85}px` }}>
-                {content}
+              {coverImage && (
+                 <img src={coverImage} className="w-full max-h-32 object-cover rounded-md border border-white/10 mt-2 mb-2" alt="Cover" />
+              )}
+              <div className="text-[#e6e6e6] leading-relaxed pb-4 pt-2 font-medium" style={{ fontSize: `${actualFontSize * 0.85}px` }}>
+                <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
               </div>
               <div className="mt-auto pt-4 flex items-center gap-2 text-[#27c93f] text-2xl">
                 <span className="animate-pulse font-black">_</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 10. COVER (封面风) */}
+      {layout === "cover" && (
+        <div className="flex-1 flex flex-col z-10 w-full h-full text-center relative justify-between">
+          <div className="w-full flex-1 flex flex-col items-center justify-center pt-4">
+            {coverImage ? (
+               <div className="w-full h-[55%] relative rounded-[2.5rem] overflow-hidden shadow-2xl mb-8 border-4 border-white/20 shrink-0">
+                 <img src={coverImage} className="w-full h-full object-cover" alt="Cover" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+               </div>
+            ) : (
+               <div className="w-full h-[55%] flex flex-col items-center justify-center rounded-[2.5rem] bg-white/10 backdrop-blur-3xl shadow-2xl mb-8 border border-white/20 shrink-0">
+                 {/* fallback icon */}
+                 <Sparkles className="w-24 h-24 opacity-20 mb-4" />
+                 <span className="text-xs font-bold uppercase tracking-widest opacity-40">Upload Cover Image</span>
+               </div>
+            )}
+            
+            <p className="text-sm font-black tracking-[0.4em] uppercase opacity-70 mb-4 bg-brand-start text-white px-4 py-1.5 rounded-full inline-block shadow-lg z-10 shrink-0">
+              {subtitle || "FEATURED"}
+            </p>
+            <h1 className="font-black leading-[1.05] tracking-tight drop-shadow-xl z-10 w-full" style={{ fontSize: `${actualFontSize * 1.5}px` }}>
+              {title}
+            </h1>
+          </div>
+          
+          <div className="flex items-center justify-between w-full z-10 pt-8 mt-6 border-t border-white/20 shrink-0">
+            {author && (
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg ring-2 ring-white/30 overflow-hidden shadow-xl uppercase">
+                  {author[1] || "T"}
+                </div>
+                <div className="text-left">
+                  <div className="text-base font-black tracking-widest uppercase">{author}</div>
+                  <div className="text-[10px] font-bold opacity-60 tracking-[0.2em]">{new Date().getFullYear()} COLLECTION</div>
+                </div>
+              </div>
+            )}
+            <Sparkles className="w-8 h-8 opacity-40 animate-pulse" />
+          </div>
+        </div>
+      )}
+
+      {/* 11. DENSE LIST (高容量干货) */}
+      {layout === "denseList" && (
+        <div className="flex-1 flex flex-col z-10 w-full">
+          <div className="space-y-1 mb-6 text-left border-b-2 border-current pb-4 opacity-90">
+            <h1 className="font-black leading-tight tracking-tight" style={{ fontSize: `${actualFontSize * 1.1}px` }}>
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-70 mt-2">
+                {subtitle}
+              </p>
+            )}
+          </div>
+          
+          {coverImage && (
+             <img src={coverImage} className="w-full max-h-24 object-cover rounded-lg shadow-sm mb-4 opacity-95" alt="Cover" />
+          )}
+
+          <div className="space-y-2 flex-1 relative">
+            <div className="absolute left-3 top-0 bottom-0 w-px bg-current opacity-20" />
+            {content.split('\n').filter(Boolean).map((line, i) => (
+              <div key={i} className="flex items-start gap-4 p-3 rounded-xl bg-white/5 dark:bg-black/10 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-6 h-6 rounded flex items-center justify-center bg-current/10 border border-current/20 font-black text-[10px] shrink-0 shadow-sm z-10 relative">
+                  <span>{i + 1}</span>
+                </div>
+                <div className="leading-snug font-semibold opacity-90 flex-1" style={{ fontSize: `${actualFontSize * 0.75}px` }}>
+                  <ReactMarkdown components={{...MarkdownComponents, p: ({node, ...props}) => <p className="mb-0" {...props} />}}>{line}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-auto pt-4 w-full flex justify-end shrink-0">
+            <span className="text-[10px] font-black tracking-widest uppercase opacity-50 bg-current/10 px-3 py-1 rounded">
+              {author}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 12. MINIMAL (极简艺术) */}
+      {layout === "minimal" && (
+        <div className="flex-1 flex flex-col z-10 w-full h-full p-6 text-center justify-center items-center bg-transparent">
+          <div className="w-12 h-0.5 bg-current opacity-20 mb-8" />
+          <h1 className="font-serif font-black text-4xl leading-tight tracking-wide mb-6">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-50 mb-10">
+              {subtitle}
+            </p>
+          )}
+          
+          {coverImage && (
+             <img src={coverImage} className="w-3/4 max-h-48 object-cover rounded shadow-md mb-8 grayscale hover:grayscale-0 transition-all" alt="Cover" />
+          )}
+
+          <div className="leading-relaxed font-normal opacity-80 max-w-[85%]" style={{ fontSize: `${actualFontSize}px` }}>
+            <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
+          </div>
+          <div className="w-12 h-0.5 bg-current opacity-20 mt-12 mb-6" />
+          {author && (
+            <span className="text-xs font-serif italic opacity-60">
+              {author}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* 13. NOTION (文档笔记) */}
+      {layout === "notion" && (
+        <div className="flex-1 flex flex-col z-10 w-full h-full text-left relative overflow-hidden rounded-lg">
+          {coverImage && (
+             <div className="absolute top-0 left-0 right-0 h-32 z-0">
+               <img src={coverImage} className="w-full h-full object-cover" alt="Cover" />
+             </div>
+          )}
+          <div className={cn("relative z-10", coverImage ? "mt-24" : "")}>
+             <div className="w-16 h-16 text-5xl mb-4 rounded-lg flex items-center justify-center">
+               {author?.[0] || "📄"}
+             </div>
+             <h1 className="font-bold text-4xl tracking-tight mb-2">
+               {title}
+             </h1>
+             {subtitle && (
+               <p className="text-sm font-medium opacity-50 mb-6 border-b border-current/10 pb-4">
+                 {subtitle}
+               </p>
+             )}
+          </div>
+          
+          <div className="flex-1 relative z-10 mt-2">
+            <div className="leading-relaxed font-normal opacity-90" style={{ fontSize: `${actualFontSize}px` }}>
+              <ReactMarkdown components={MarkdownComponents}>{content}</ReactMarkdown>
             </div>
           </div>
         </div>

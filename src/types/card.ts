@@ -1,5 +1,5 @@
 export type AspectRatio = "3:4" | "4:3" | "1:1" | "9:16";
-export type Layout = "left" | "center" | "quote" | "tweet" | "list" | "magazine" | "dictionary" | "qa" | "steps" | "code";
+export type Layout = "left" | "center" | "quote" | "tweet" | "list" | "magazine" | "dictionary" | "qa" | "steps" | "code" | "cover" | "denseList" | "minimal" | "notion";
 export type BackgroundType = "solid" | "gradient" | "image" | "pattern";
 export type PatternType = "none" | "dots" | "grid" | "lines" | "blobs";
 
@@ -18,6 +18,8 @@ export interface CardState {
   textColor: string;
   backgroundColor: string;
   backgroundImage?: string;
+  autoScaleText: boolean;
+  coverImage?: string;
 }
 
 export const INITIAL_STATE: CardState = {
@@ -34,4 +36,5 @@ export const INITIAL_STATE: CardState = {
   fontSize: 24,
   textColor: "#ffffff",
   backgroundColor: "#ff4d4d",
+  autoScaleText: true,
 };
