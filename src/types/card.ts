@@ -1,5 +1,19 @@
 export type AspectRatio = "3:4" | "4:3" | "1:1" | "9:16";
-export type Layout = "left" | "center" | "quote" | "tweet" | "list" | "magazine" | "dictionary" | "qa" | "steps" | "code" | "cover" | "denseList" | "minimal" | "notion";
+export type Layout =
+  | "left"
+  | "center"
+  | "quote"
+  | "tweet"
+  | "list"
+  | "magazine"
+  | "dictionary"
+  | "qa"
+  | "steps"
+  | "code"
+  | "cover"
+  | "denseList"
+  | "minimal"
+  | "notion";
 export type BackgroundType = "solid" | "gradient" | "image" | "pattern";
 export type PatternType = "none" | "dots" | "grid" | "lines" | "blobs";
 
@@ -25,8 +39,9 @@ export interface CardState {
 export const INITIAL_STATE: CardState = {
   title: "Example Title",
   subtitle: "Insightful Subtitle",
-  content: "This is a beautiful knowledge card. You can now toggle Glass effects on images and adjust text colors independently.",
-  author: "@tangxiaobin",
+  content:
+    "This is a beautiful knowledge card. You can now toggle Glass effects on images and adjust text colors independently.",
+  author: "@bill",
   watermark: "© 2026 KNOWLEDGE SHARE",
   backgroundType: "gradient",
   patternType: "none",
